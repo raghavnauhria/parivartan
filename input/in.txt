@@ -1,4 +1,4 @@
-event Load(Agent1,Agent2).
+event Load(Agent1,Agent2,Agent3).
 event Shoot().
 event Sneeze().
 
@@ -11,6 +11,9 @@ Agent1 a12.
 
 Agent2 a21.
 Agent2 a22.
+
+Agent3 a31.
+Agent3 a32.
 
 time 0.
 time 1.

@@ -105,7 +105,7 @@ def main(input_file_name, output_file):
 
                 reified_dict[sort_type].append(reify)
 
-    print(reified_dict)
+    print("Reified:", reified_dict)
 
     # STEP 2: uniqueness
     # STEP 3: circumscription
