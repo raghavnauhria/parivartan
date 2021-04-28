@@ -1,0 +1,17 @@
+event Load(Agent1,Agent2).
+event Shoot().
+event Sneeze().
+
+fluent Loaded().
+fluent Alive().
+fluent Dead().
+
+Agent1 a11.
+Agent1 a12.
+
+Agent2 a21.
+Agent2 a22.
+
+time 0.
+time 1.
+time 2.

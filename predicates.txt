@@ -1,0 +1,6 @@
+Happens(event,time)
+HoldsAt(fluent,time)
+ReleasedAt(fluent,time)
+Initiates(event,fluent,time)
+Terminates(event,fluent,time)
+Releases(event,fluent,time)

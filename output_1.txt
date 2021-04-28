@@ -1,0 +1,28 @@
+%% Circumscribed initiates axioms
+[event,fluent,time] (initiates(event, fluent, time ) <=> (event = load ∧ fluent = loaded )).
+
+%% Circumscribed terminates axioms
+[event,fluent,time] (terminates (event, fluent, time ) <=> (event = shoot ∧ fluent = loaded )).
+
+%% Circumscribed releases axioms
+[event,fluent,time] (releases(event, fluent, time ) <=> (fluent = alive)).
+
+%% Circumscribed event occurrences
+[event,time] (happens(event, time) <=> ((event = load ∧ time = 0) ∨ (event = sneeze ∧ time = 1) ∨
+(event = shoot ∧ time = 2))).
+
+%% Uniqueness-of-names axioms for events
+load != sneeze.
+sneeze != shoot.
+shoot != load.
+
+%% Uniqueness-of-names axioms for fluents
+alive != loaded.
+dead != alive.
+loaded != dead.
+
+%% Initial conditions
+HoldsAt(Alive(),0).
+!HoldsAt(Loaded(),0).
+[ time ] !releasedAt(alive, time ).
+[ time ] !releasedAt(loaded, time ).
