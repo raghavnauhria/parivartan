@@ -71,18 +71,22 @@ def main(input_file_name, output_file):
         elif words[0] in interesting_dict.keys():
             pass
 
+        # added for exception, remove later
+        elif len(words) == 1:
+        	pass
+
         # words[0] == Agent
         else:
-            print('here')
+            # print('here')
             agent_dict[words[0]].append(words[1][:-1])
     
-    print("Sorts=", sorts_dict)
-    print("Agents=", agent_dict)
+    # print("Sorts=", sorts_dict)
+    # print("Agents=", agent_dict)
 
     # STEP 1: Reification
     print("Step 1")
     for sort_type in ["event", "fluent"]:
-        print("For", sort_type)
+        # print("For", sort_type)
         for sort_obj in sorts_dict[sort_type]:
 
             if len(sort_obj.args) == 0:
@@ -105,9 +109,20 @@ def main(input_file_name, output_file):
 
                 reified_dict[sort_type].append(reify)
 
-    print("Reified:", reified_dict)
+    # print("Reified:", reified_dict)
 
     # STEP 2: uniqueness
+    print("Step 2")
+    # uniqueness of names for events
+    event_comb = itertools.combinations(reified_dict["event"],2)
+    for event_pair in list(event_comb):
+    	print(event_pair[0]," != ",event_pair[1])
+
+    # uniqueness of names for fluents
+    fluent_comb = itertools.combinations(reified_dict["fluent"],2)
+    for fluent_pair in list(fluent_comb):
+    	print(fluent_pair[0]," != ",fluent_pair[1])
+
     # STEP 3: circumscription
 
 if __name__ == "__main__":
