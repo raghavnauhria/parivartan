@@ -39,7 +39,7 @@ def main(input_file_name, output_file):
     }
 
     # [time] Initiates(Load(a1),Loaded(),time).  event = load_a1
-    agent_dict = defaultdict(list)
+    agent_dict = {}
     # "Agent1": ["a1", "a2"]
 
     reified_dict = {
@@ -59,6 +59,7 @@ def main(input_file_name, output_file):
 
         words = line.strip().split(" ")
         
+        # words[0] == "event" || "fluent" || "time"
         if words[0] in sorts_dict.keys():
             tokens = re.findall(r'\w+', words[1])
 
@@ -67,7 +68,15 @@ def main(input_file_name, output_file):
             else:
                 sort_obj = DomainSort(tokens[0], tokens[1:])
                 sorts_dict[words[0]].append(sort_obj)
+
+                for agent in tokens[1:]:
+                    agent_dict[agent] = list()
+
+        # words[0] == Agent
+        elif words[0] in agent_dict.keys():
+            agent_dict[words[0]].append(words[1][:-1])
     
+        # words[0] == "noninertial"
         elif words[0] in interesting_dict.keys():
             pass
 
@@ -75,10 +84,8 @@ def main(input_file_name, output_file):
         elif len(words) == 1:
         	pass
 
-        # words[0] == Agent
         else:
-            # print('here')
-            agent_dict[words[0]].append(words[1][:-1])
+            pass
     
     # print("Sorts=", sorts_dict)
     # print("Agents=", agent_dict)
@@ -109,7 +116,7 @@ def main(input_file_name, output_file):
 
                 reified_dict[sort_type].append(reify)
 
-    # print("Reified:", reified_dict)
+    print("Reified:", reified_dict)
 
     # STEP 2: uniqueness
     print("Step 2")
