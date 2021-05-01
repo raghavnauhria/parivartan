@@ -1,3 +1,7 @@
+sort Agent1.
+sort Agent2.
+sort Agent3.
+
 event Load(Agent1,Agent2,Agent3).
 event Shoot().
 event Sneeze().

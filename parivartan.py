@@ -1,7 +1,5 @@
 import argparse
 import re
-from dataclasses import dataclass, field
-from typing import List, Set
 from collections import defaultdict
 import itertools
 
@@ -17,15 +15,39 @@ def create_cmdline_parser() -> argparse.ArgumentParser:
 
     return cmd_parser
 
-@dataclass
 class DomainSort(object):
-    name: str
-    args: List[str] = field(default_factory=list)
+    def __init__(self, name, args):
+        self.name = name
+        self.args = args
+        self.reified = list()
+
+    def __repr__(self):
+        return "DomainSort(name=%s, args=%s, reified=%s)" % (self.name, self.args, self.reified)
+
+    def reify(self, agent_dict):
+        if len(self.args) == 0:
+            self.reified.append(self.name.lower())
+        else:
+            agent_list = [] # list of lists
+            for agent in self.args:
+                agent_list.append(agent_dict[agent])
+            
+            for permutation in list(itertools.product(*agent_list)):
+                atom = self.name.lower() + "_"         # "load_"
+                
+                perm_list = list(permutation)
+                for x in perm_list:
+                    atom += x + "_"                    # "load_a1_a2_"
+                
+                atom = atom[:-1]                      # "load_a1_a2"
+
+                self.reified.append(atom)
 
 
 class Predicate(object):
-    def __init__(self):
+    def __init__(self, name, args):
         self.name
+        self.args
 
 def main(input_file_name, output_file):
     domain_file = open(input_file_name, 'r')
@@ -59,8 +81,22 @@ def main(input_file_name, output_file):
 
         words = line.strip().split(" ")
         
+        # add agent as dictionary key
+        if words[0] == "sort":
+            if words[1][-1] == ".":
+                words[1] = words[1][:-1]
+
+            agent_dict[words[1]] = list()
+
+        # add instance of agent to list in agent_dict
+        elif words[0] in agent_dict.keys():
+            if words[1][-1] == ".":
+                words[1] = words[1][:-1]
+
+            agent_dict[words[0]].append(words[1])
+
         # words[0] == "event" || "fluent" || "time"
-        if words[0] in sorts_dict.keys():
+        elif words[0] in sorts_dict.keys():
             tokens = re.findall(r'\w+', words[1])
 
             if words[0] == "time":
@@ -68,13 +104,6 @@ def main(input_file_name, output_file):
             else:
                 sort_obj = DomainSort(tokens[0], tokens[1:])
                 sorts_dict[words[0]].append(sort_obj)
-
-                for agent in tokens[1:]:
-                    agent_dict[agent] = list()
-
-        # words[0] == Agent
-        elif words[0] in agent_dict.keys():
-            agent_dict[words[0]].append(words[1][:-1])
     
         # words[0] == "noninertial"
         elif words[0] in interesting_dict.keys():
@@ -87,48 +116,27 @@ def main(input_file_name, output_file):
         else:
             pass
     
-    # print("Sorts=", sorts_dict)
-    # print("Agents=", agent_dict)
+    print("Sorts=", sorts_dict)
+    print("Agents=", agent_dict)
 
     # STEP 1: Reification
-    print("Step 1")
+    print("Step 1:")
     for sort_type in ["event", "fluent"]:
-        # print("For", sort_type)
         for sort_obj in sorts_dict[sort_type]:
+            sort_obj.reify(agent_dict)
 
-            if len(sort_obj.args) == 0:
-                reified_dict[sort_type].append(sort_obj.name.lower())
-                continue
-
-            agent_list = [] # list of lists
-            for agent in sort_obj.args:
-                agent_list.append(agent_dict[agent])
-            
-            res = list(itertools.product(*agent_list))
-            for permutation in res:
-                reify = sort_obj.name.lower() + "_"
-                
-                perm_list = list(permutation)
-                for x in perm_list:
-                    reify += x + "_"
-                
-                reify = reify[:-1]
-
-                reified_dict[sort_type].append(reify)
+            reified_dict[sort_type].extend(sort_obj.reified)
 
     print("Reified:", reified_dict)
 
     # STEP 2: uniqueness
-    print("Step 2")
-    # uniqueness of names for events
-    event_comb = itertools.combinations(reified_dict["event"],2)
-    for event_pair in list(event_comb):
-    	print(event_pair[0]," != ",event_pair[1])
+    print("Step 2:")
 
-    # uniqueness of names for fluents
-    fluent_comb = itertools.combinations(reified_dict["fluent"],2)
-    for fluent_pair in list(fluent_comb):
-    	print(fluent_pair[0]," != ",fluent_pair[1])
+    for sort_type in ["event", "fluent"]:
+        print("%% Uniqueness-of-names axioms for", sort_type)
+        sort_comb = itertools.combinations(reified_dict[sort_type], 2)
+        for sort_pair in list(sort_comb):
+            print(sort_pair[0]," != ", sort_pair[1])
 
     # STEP 3: circumscription
 
