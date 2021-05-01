@@ -71,6 +71,11 @@ class Predicate(object):
         return "Predicate(name=%s, args=%s, instances=%s)" % (self.name, self.args, self.instances)
 
 def readPredicates(predicates_file: str) -> Dict[str, Predicate]:
+    """
+    Function to read the EC predicates
+    :param predicates_file: Filename
+    :return: dictionary mapping predicate name to it's object for O(1) access
+    """
     predicates_dict = {
         # "Initiates" : Predicate(Initiates(event,fluent,time)),
     }
