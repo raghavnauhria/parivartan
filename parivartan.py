@@ -1,6 +1,7 @@
 import argparse
 import re
 from collections import defaultdict
+from typing import Set, Dict, List
 import itertools
 
 def create_cmdline_parser() -> argparse.ArgumentParser:
@@ -12,19 +13,32 @@ def create_cmdline_parser() -> argparse.ArgumentParser:
         description='Simple service to append words for a document')
     cmd_parser.add_argument('-i', '--input', action='store', type=str, help='input file = domain file name', default="domain.txt")
     cmd_parser.add_argument('-o', '--output', action='store', type=str, help='output file name (NOTE: will be overwritten)', default="output.txt")
+    cmd_parser.add_argument('-p', '--predicates', action='store', type=str, help='.txt file containing EC predicates', default="predicates.txt")
 
     return cmd_parser
 
 class DomainSort(object):
-    def __init__(self, name, args):
+    def __init__(self, name: str, args: List[str]):
+        """
+        Constructor function
+        :param name: name of event/fluent declared
+        :param args: input arguments to this event/fluent
+        """
         self.name = name
         self.args = args
         self.reified = list()
 
     def __repr__(self):
+        """
+        Function to print the class object
+        """
         return "DomainSort(name=%s, args=%s, reified=%s)" % (self.name, self.args, self.reified)
 
-    def reify(self, agent_dict):
+    def reify(self, agent_dict: Dict[str, List[str]]):
+        """
+        Function to reify the given event/fluent w.r.t the agents in the argument
+        :param agent_dict: dictionary of all agents, with agent_names as keys, which maps to instances as a list
+        """
         if len(self.args) == 0:
             self.reified.append(self.name.lower())
         else:
@@ -45,13 +59,38 @@ class DomainSort(object):
 
 
 class Predicate(object):
-    def __init__(self, name, args):
-        self.name
-        self.args
+    def __init__(self, name:str, args: List[str]):
+        self.name = name
+        self.args = args
+        self.instances = list()
 
-def main(input_file_name, output_file):
-    domain_file = open(input_file_name, 'r')
-    domain = domain_file.readlines()
+    def __repr__(self):
+        """
+        Function to print the class object
+        """
+        return "Predicate(name=%s, args=%s, instances=%s)" % (self.name, self.args, self.instances)
+
+def readPredicates(predicates_file: str) -> Dict[str, Predicate]:
+    predicates_dict = {
+        # "Initiates" : Predicate(Initiates(event,fluent,time)),
+    }
+
+    pred_file = open(predicates_file, 'r')
+    pred = pred_file.readlines()
+
+    # read the predicates.txt file line-by-line
+    for line in pred:
+        line = line.strip()
+        if line == '':
+            continue
+
+        tokens = re.findall(r'\w+', line)
+        predicates_dict[tokens[0]] = Predicate(tokens[0], tokens[1:])
+
+    return predicates_dict
+
+def main(input_file_name, output_file, predicates_file):
+    predicates_dict = readPredicates(predicates_file)
 
     # event Load(Agent1,Agent2)
     sorts_dict = {
@@ -60,9 +99,7 @@ def main(input_file_name, output_file):
         "time": []
     }
 
-    # [time] Initiates(Load(a1),Loaded(),time).  event = load_a1
     agent_dict = {}
-    # "Agent1": ["a1", "a2"]
 
     reified_dict = {
         "event": [],
@@ -72,6 +109,9 @@ def main(input_file_name, output_file):
     interesting_dict = {
         "noninertial": []
     }
+
+    domain_file = open(input_file_name, 'r')
+    domain = domain_file.readlines()
 
     # read the Domain.txt file line-by-line
     for line in domain:
@@ -144,4 +184,4 @@ if __name__ == "__main__":
     parser = create_cmdline_parser()
     args = parser.parse_args()
 
-    main(args.input, args.output)
+    main(args.input, args.output, args.predicates)
