@@ -16,9 +16,15 @@ Agent1 a12.
 Agent2 a21.
 Agent2 a22.
 
-Agent3 a31.
-Agent3 a32.
-
 time 0.
 time 1.
 time 2.
+
+[time] Terminates(Shoot(),Loaded(),time).
+[time] Initiates(Load(Agent1,Agent2),Loaded(),time).
+
+Happens(Sneeze(),1).
+Happens(Shoot(),2).
+
+HoldsAt(Alive(),0).
+!HoldsAt(Loaded(),0).
