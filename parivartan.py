@@ -165,8 +165,7 @@ class Predicate(object):
     def circumscribe(self):
         boiler = self.name + "(" + ', '.join(self.args) + ")"
 
-        print("%% Circumscribed", boiler, "axioms")
-        print(self.args, end=" ")
+        print("[" + ','.join(self.args) + "]", end=" ")
         if len(self.instances) == 0:
             print(boiler+".")
         else:
@@ -213,6 +212,8 @@ def readPredicates(predicates_file: str) -> Dict[str, Predicate]:
 
 def main(input_file_name, output_file, predicates_file):
     predicates_dict = readPredicates(predicates_file)
+    if "Releases" in predicates_dict.keys():
+        predicates_dict["\\not Releases"] = Predicate("\\not Releases", predicates_dict["Releases"].args)
 
     f = open(output_file, "w")
     sys.stdout = f
@@ -271,7 +272,11 @@ def main(input_file_name, output_file, predicates_file):
     
         # words[0] == "noninertial"
         elif words[0] in interesting_dict.keys():
-            pass
+            words[1] = words[1][:-1]
+            interesting_dict[words[0]].append(words[1])
+            pred_args = "event,%s,time"%(words[1])
+
+            predicates_dict["Releases"].addInstanceAndReify(pred_args, agent_dict)
 
         # # added for exception, remove later
         # elif len(words) == 1:
@@ -323,11 +328,25 @@ def main(input_file_name, output_file, predicates_file):
             print(sort_pair[0]," != ", sort_pair[1])
 
     print("\n%% STEP 3: circumscription")
-    predicates_dict["Initiates"].circumscribe()
-    predicates_dict["Terminates"].circumscribe()
-    predicates_dict["Happens"].circumscribe()
+    for pred in ["Initiates", "Terminates", "Happens"]:
+        boiler = pred + "(" + ', '.join(predicates_dict[pred].args) + ")"
+        print("%% Circumscribed", boiler, "axioms")
+        predicates_dict[pred].circumscribe()
 
-    print("%% reified initial conditions")
+    print("%% Circumscribed Releases(event,fluent,time) axioms")
+    if len(interesting_dict["noninertial"]) == 0:
+        predicates_dict["\\not Releases"].circumscribe()
+    else:
+        for fluent_ in sorts_dict["fluent"]:
+            fluent_inst = fluent_.name + "(" + ','.join(fluent_.args) +  ")"
+            if fluent_inst not in interesting_dict["noninertial"]:
+                pred_args = "event,%s,time" % (fluent_inst)
+                predicates_dict["\\not Releases"].addInstanceAndReify(pred_args, agent_dict)
+        
+        predicates_dict["\\not Releases"].circumscribe()
+        predicates_dict["Releases"].circumscribe()
+
+    print("\n%% reified initial conditions")
     predicates_dict["HoldsAt"].circumscribe_holdsat()
 
 

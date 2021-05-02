@@ -20,6 +20,8 @@ time 0.
 time 1.
 time 2.
 
+noninertial Dead().
+
 [time] Terminates(Shoot(),Loaded(),time).
 [time] Initiates(Load(Agent1,Agent2),Loaded(),time).
 

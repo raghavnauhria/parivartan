@@ -27,16 +27,27 @@ alive  !=  dead
 
 %% STEP 3: circumscription
 %% Circumscribed Initiates(event, fluent, time) axioms
-['event', 'fluent', 'time'] ( Initiates(event, fluent, time) <=>
+[event,fluent,time] ( Initiates(event, fluent, time) <=>
 (event = load_a11_a21 AND fluent = loaded) OR (event = load_a11_a22 AND fluent = loaded) OR (event = load_a12_a21 AND fluent = loaded) OR (event = load_a12_a22 AND fluent = loaded) ).
 
 %% Circumscribed Terminates(event, fluent, time) axioms
-['event', 'fluent', 'time'] ( Terminates(event, fluent, time) <=>
+[event,fluent,time] ( Terminates(event, fluent, time) <=>
 (event = shoot AND fluent = loaded) ).
 
 %% Circumscribed Happens(event, time) axioms
-['event', 'time'] ( Happens(event, time) <=>
+[event,time] ( Happens(event, time) <=>
 (event = sneeze AND time = 1) OR (event = shoot AND time = 2) ).
+
+%% Circumscribed Releases(event,fluent,time) axioms
+Testing:  Loaded()
+Testing:  Alive()
+Testing:  Dead()
+[event,fluent,time] ( \not Releases(event, fluent, time) <=>
+(fluent = loaded) OR (fluent = alive) ).
+
+[event,fluent,time] ( Releases(event, fluent, time) <=>
+(fluent = dead) ).
+
 
 %% reified initial conditions
 HoldsAt(alive,0).
