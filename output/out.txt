@@ -1,0 +1,43 @@
+%% Step 1: Reification
+event load_a11_a21, load_a11_a22, load_a12_a21, load_a12_a22, shoot, sneeze
+fluent loaded, alive, dead
+time 0, 1, 2
+
+%% Step 2:
+%% Uniqueness-of-names axioms for event
+load_a11_a21  !=  load_a11_a22
+load_a11_a21  !=  load_a12_a21
+load_a11_a21  !=  load_a12_a22
+load_a11_a21  !=  shoot
+load_a11_a21  !=  sneeze
+load_a11_a22  !=  load_a12_a21
+load_a11_a22  !=  load_a12_a22
+load_a11_a22  !=  shoot
+load_a11_a22  !=  sneeze
+load_a12_a21  !=  load_a12_a22
+load_a12_a21  !=  shoot
+load_a12_a21  !=  sneeze
+load_a12_a22  !=  shoot
+load_a12_a22  !=  sneeze
+shoot  !=  sneeze
+%% Uniqueness-of-names axioms for fluent
+loaded  !=  alive
+loaded  !=  dead
+alive  !=  dead
+
+%% STEP 3: circumscription
+%% Circumscribed Initiates(event, fluent, time) axioms
+['event', 'fluent', 'time'] ( Initiates(event, fluent, time) <=>
+(event = load_a11_a21 AND fluent = loaded) OR (event = load_a11_a22 AND fluent = loaded) OR (event = load_a12_a21 AND fluent = loaded) OR (event = load_a12_a22 AND fluent = loaded) ).
+
+%% Circumscribed Terminates(event, fluent, time) axioms
+['event', 'fluent', 'time'] ( Terminates(event, fluent, time) <=>
+(event = shoot AND fluent = loaded) ).
+
+%% Circumscribed Happens(event, time) axioms
+['event', 'time'] ( Happens(event, time) <=>
+(event = sneeze AND time = 1) OR (event = shoot AND time = 2) ).
+
+%% reified initial conditions
+HoldsAt(alive,0).
+!HoldsAt(loaded,0).

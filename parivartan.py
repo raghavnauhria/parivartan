@@ -2,6 +2,7 @@ import argparse
 import re
 from typing import Set, Dict, List
 import itertools
+import sys
 
 def create_cmdline_parser() -> argparse.ArgumentParser:
     """
@@ -106,15 +107,12 @@ class Predicate(object):
         :param agent_dict: dictionary of all agents, with agent_names as keys, which maps to instances as a list
         :param pred_remarks: to capture instance specific boolean values
         """
-        print("Entered")
         reified_instance = []  # list of lists
         counter = 0
         while counter < len(self.args):
             # get sort name
             x = re.search(r'\w+', arg_string)
             sort_name = arg_string[0:x.end()].lower()
-
-            print("sort_name", sort_name)
 
             arg_string = arg_string[x.end():]
 
@@ -216,6 +214,9 @@ def readPredicates(predicates_file: str) -> Dict[str, Predicate]:
 def main(input_file_name, output_file, predicates_file):
     predicates_dict = readPredicates(predicates_file)
 
+    f = open(output_file, "w")
+    sys.stdout = f
+
     sorts_dict = {
         "event": [],
         "fluent": [],
@@ -301,25 +302,27 @@ def main(input_file_name, output_file, predicates_file):
     # print("Agents=", agent_dict)
 
     # STEP 1: Reification
-    print("Step 1:")
+    print("%% Step 1: Reification")
     for sort_type in ["event", "fluent"]:
         for sort_obj in sorts_dict[sort_type]:
             sort_obj.reify(agent_dict)
 
             reified_dict[sort_type].extend(sort_obj.reified)
 
-    # print("Reified:", reified_dict)
+    print("event", ', '.join(reified_dict["event"]))
+    print("fluent", ', '.join(reified_dict["fluent"]))
+    print("time", ', '.join(sorts_dict["time"]))
 
     # # STEP 2: uniqueness
-    print("Step 2:")
+    print("\n%% Step 2:")
 
-    # for sort_type in ["event", "fluent"]:
-    #     print("%% Uniqueness-of-names axioms for", sort_type)
-    #     sort_comb = itertools.combinations(reified_dict[sort_type], 2)
-    #     for sort_pair in list(sort_comb):
-    #         print(sort_pair[0]," != ", sort_pair[1])
+    for sort_type in ["event", "fluent"]:
+        print("%% Uniqueness-of-names axioms for", sort_type)
+        sort_comb = itertools.combinations(reified_dict[sort_type], 2)
+        for sort_pair in list(sort_comb):
+            print(sort_pair[0]," != ", sort_pair[1])
 
-    # STEP 3: circumscription
+    print("\n%% STEP 3: circumscription")
     predicates_dict["Initiates"].circumscribe()
     predicates_dict["Terminates"].circumscribe()
     predicates_dict["Happens"].circumscribe()
