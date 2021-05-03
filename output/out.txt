@@ -3,7 +3,7 @@ event load_a11_a21, load_a11_a22, load_a12_a21, load_a12_a22, shoot, sneeze
 fluent loaded, alive, dead
 time 0, 1, 2
 
-%% Step 2:
+%% Step 2: Uniqueness
 %% Uniqueness-of-names axioms for event
 load_a11_a21  !=  load_a11_a22
 load_a11_a21  !=  load_a12_a21
@@ -39,9 +39,6 @@ alive  !=  dead
 (event = sneeze AND time = 1) OR (event = shoot AND time = 2) ).
 
 %% Circumscribed Releases(event,fluent,time) axioms
-Testing:  Loaded()
-Testing:  Alive()
-Testing:  Dead()
 [event,fluent,time] ( \not Releases(event, fluent, time) <=>
 (fluent = loaded) OR (fluent = alive) ).
 
@@ -52,3 +49,8 @@ Testing:  Dead()
 %% reified initial conditions
 HoldsAt(alive,0).
 !HoldsAt(loaded,0).
+
+%% Circumscribed ReleasedAt(fluent,time) axioms
+[fluent,time] ( \not ReleasedAt(fluent, time) <=>
+(fluent = loaded) OR (fluent = alive) ).
+

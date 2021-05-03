@@ -214,6 +214,8 @@ def main(input_file_name, output_file, predicates_file):
     predicates_dict = readPredicates(predicates_file)
     if "Releases" in predicates_dict.keys():
         predicates_dict["\\not Releases"] = Predicate("\\not Releases", predicates_dict["Releases"].args)
+    if "ReleasedAt" in predicates_dict.keys():
+        predicates_dict["\\not ReleasedAt"] = Predicate("\\not ReleasedAt", predicates_dict["ReleasedAt"].args)
 
     f = open(output_file, "w")
     sys.stdout = f
@@ -278,10 +280,6 @@ def main(input_file_name, output_file, predicates_file):
 
             predicates_dict["Releases"].addInstanceAndReify(pred_args, agent_dict)
 
-        # # added for exception, remove later
-        # elif len(words) == 1:
-        # 	pass
-
         else:
             if words[0][0] == "[":
                 # action descriptions
@@ -318,8 +316,8 @@ def main(input_file_name, output_file, predicates_file):
     print("fluent", ', '.join(reified_dict["fluent"]))
     print("time", ', '.join(sorts_dict["time"]))
 
-    # # STEP 2: uniqueness
-    print("\n%% Step 2:")
+    # STEP 2: uniqueness
+    print("\n%% Step 2: Uniqueness")
 
     for sort_type in ["event", "fluent"]:
         print("%% Uniqueness-of-names axioms for", sort_type)
@@ -327,6 +325,7 @@ def main(input_file_name, output_file, predicates_file):
         for sort_pair in list(sort_comb):
             print(sort_pair[0]," != ", sort_pair[1])
 
+    # STEP 3: circumscription
     print("\n%% STEP 3: circumscription")
     for pred in ["Initiates", "Terminates", "Happens"]:
         boiler = pred + "(" + ', '.join(predicates_dict[pred].args) + ")"
@@ -348,6 +347,19 @@ def main(input_file_name, output_file, predicates_file):
 
     print("\n%% reified initial conditions")
     predicates_dict["HoldsAt"].circumscribe_holdsat()
+
+    print("\n%% Circumscribed ReleasedAt(fluent,time) axioms")
+    if len(interesting_dict["noninertial"]) == 0:
+        predicates_dict["\\not ReleasedAt"].circumscribe()
+    else:
+        for fluent_ in sorts_dict["fluent"]:
+            fluent_inst = fluent_.name + "(" + ','.join(fluent_.args) +  ")"
+            if fluent_inst not in interesting_dict["noninertial"]:
+                pred_args = "%s,time" % (fluent_inst)
+                predicates_dict["\\not ReleasedAt"].addInstanceAndReify(pred_args, agent_dict)
+        
+        predicates_dict["\\not ReleasedAt"].circumscribe()
+        # predicates_dict["ReleasedAt"].circumscribe()
 
 
 if __name__ == "__main__":
