@@ -1,0 +1,72 @@
+%% Step 1: Reification
+event load_a11_a21, load_a11_a22, load_a12_a21, load_a12_a22, shoot, sneeze
+fluent loaded_o11_o21, loaded_o11_o22, loaded_o12_o21, loaded_o12_o22, alive, dead
+time 0, 1, 2
+
+%% Step 2: Uniqueness
+
+%% Uniqueness-of-names axioms for event
+load_a11_a21  !=  load_a11_a22
+load_a11_a21  !=  load_a12_a21
+load_a11_a21  !=  load_a12_a22
+load_a11_a21  !=  shoot
+load_a11_a21  !=  sneeze
+load_a11_a22  !=  load_a12_a21
+load_a11_a22  !=  load_a12_a22
+load_a11_a22  !=  shoot
+load_a11_a22  !=  sneeze
+load_a12_a21  !=  load_a12_a22
+load_a12_a21  !=  shoot
+load_a12_a21  !=  sneeze
+load_a12_a22  !=  shoot
+load_a12_a22  !=  sneeze
+shoot  !=  sneeze
+
+%% Uniqueness-of-names axioms for fluent
+loaded_o11_o21  !=  loaded_o11_o22
+loaded_o11_o21  !=  loaded_o12_o21
+loaded_o11_o21  !=  loaded_o12_o22
+loaded_o11_o21  !=  alive
+loaded_o11_o21  !=  dead
+loaded_o11_o22  !=  loaded_o12_o21
+loaded_o11_o22  !=  loaded_o12_o22
+loaded_o11_o22  !=  alive
+loaded_o11_o22  !=  dead
+loaded_o12_o21  !=  loaded_o12_o22
+loaded_o12_o21  !=  alive
+loaded_o12_o21  !=  dead
+loaded_o12_o22  !=  alive
+loaded_o12_o22  !=  dead
+alive  !=  dead
+
+%% STEP 3: circumscription
+%% Circumscribed Initiates(event, fluent, time) axioms
+[event,fluent,time] ( Initiates(event, fluent, time) <=>
+(event = load_a11_a21 AND fluent = loaded_o11_o21) OR (event = load_a11_a21 AND fluent = loaded_o11_o22) OR (event = load_a11_a21 AND fluent = loaded_o12_o21) OR (event = load_a11_a21 AND fluent = loaded_o12_o22) OR (event = load_a11_a22 AND fluent = loaded_o11_o21) OR (event = load_a11_a22 AND fluent = loaded_o11_o22) OR (event = load_a11_a22 AND fluent = loaded_o12_o21) OR (event = load_a11_a22 AND fluent = loaded_o12_o22) OR (event = load_a12_a21 AND fluent = loaded_o11_o21) OR (event = load_a12_a21 AND fluent = loaded_o11_o22) OR (event = load_a12_a21 AND fluent = loaded_o12_o21) OR (event = load_a12_a21 AND fluent = loaded_o12_o22) OR (event = load_a12_a22 AND fluent = loaded_o11_o21) OR (event = load_a12_a22 AND fluent = loaded_o11_o22) OR (event = load_a12_a22 AND fluent = loaded_o12_o21) OR (event = load_a12_a22 AND fluent = loaded_o12_o22) ).
+
+%% Circumscribed Terminates(event, fluent, time) axioms
+[event,fluent,time] ( Terminates(event, fluent, time) <=>
+(event = shoot AND fluent = loaded_o11_o21) OR (event = shoot AND fluent = loaded_o11_o22) OR (event = shoot AND fluent = loaded_o12_o21) OR (event = shoot AND fluent = loaded_o12_o22) ).
+
+%% Circumscribed Happens(event, time) axioms
+[event,time] ( Happens(event, time) <=>
+(event = sneeze AND time = 1) OR (event = shoot AND time = 2) ).
+
+%% Circumscribed Releases(event,fluent,time) axioms
+[event,fluent,time] ( \not Releases(event, fluent, time) <=>
+(fluent = loaded_o11_o21) OR (fluent = loaded_o11_o22) OR (fluent = loaded_o12_o21) OR (fluent = loaded_o12_o22) OR (fluent = alive) ).
+
+[event,fluent,time] ( Releases(event, fluent, time) <=>
+(fluent = dead) ).
+
+
+%% reified initial conditions
+HoldsAt(alive,0).
+!HoldsAt(loaded,0).
+
+%% Circumscribed ReleasedAt(fluent,time) axioms
+[fluent,time] ( \not ReleasedAt(fluent, time) <=>
+(fluent = loaded_o11_o21) OR (fluent = loaded_o11_o22) OR (fluent = loaded_o12_o21) OR (fluent = loaded_o12_o22) OR (fluent = alive) ).
+
+%% The reified state constraint(s)
+[time] HoldsAt(dead, time) <-> !HoldsAt(alive, time).

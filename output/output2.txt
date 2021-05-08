@@ -4,6 +4,7 @@ fluent loaded, alive, dead
 time 0, 1, 2
 
 %% Step 2: Uniqueness
+
 %% Uniqueness-of-names axioms for event
 load_a11_a21  !=  load_a11_a22
 load_a11_a21  !=  load_a12_a21
@@ -20,6 +21,7 @@ load_a12_a21  !=  sneeze
 load_a12_a22  !=  shoot
 load_a12_a22  !=  sneeze
 shoot  !=  sneeze
+
 %% Uniqueness-of-names axioms for fluent
 loaded  !=  alive
 loaded  !=  dead
@@ -54,3 +56,5 @@ HoldsAt(alive,0).
 [fluent,time] ( \not ReleasedAt(fluent, time) <=>
 (fluent = loaded) OR (fluent = alive) ).
 
+%% The reified state constraint(s)
+[time] HoldsAt(dead, time) <-> !HoldsAt(alive, time).

@@ -1,24 +1,23 @@
 event Load().
 event Shoot().
 event Sneeze().
+
 fluent Loaded().
 fluent Alive().
 fluent Dead().
-
-noninertial Dead().
 
 time 0.
 time 1.
 time 2.
 
-[time] Initiates(Load(),Loaded(),time).
-[time] HoldsAt(Loaded(),time) -> Terminates(Shoot(),Alive(),time).
+noninertial Dead().
+
 [time] Terminates(Shoot(),Loaded(),time).
+[time] Initiates(Load(),Loaded(),time).
 [time] HoldsAt(Dead(),time) <-> !HoldsAt(Alive(),time).
+
+Happens(Sneeze(),1).
+Happens(Shoot(),2).
 
 HoldsAt(Alive(),0).
 !HoldsAt(Loaded(),0).
-
-Happens(Load(),0).
-Happens(Sneeze(),1).
-Happens(Shoot(),2).

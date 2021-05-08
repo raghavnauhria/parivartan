@@ -12,7 +12,7 @@ def create_cmdline_parser() -> argparse.ArgumentParser:
     cmd_parser = argparse.ArgumentParser(
         description='Simple service to append words for a document')
     cmd_parser.add_argument('-i', '--input', action='store', type=str, help='input file = domain file name', default="domain.txt")
-    cmd_parser.add_argument('-o', '--output', action='store', type=str, help='output file name (NOTE: will be overwritten)', default="output.txt")
+    cmd_parser.add_argument('-o', '--output', action='store', type=str, help='output file name (NOTE: file will be overwritten)', default="output.txt")
     cmd_parser.add_argument('-p', '--predicates', action='store', type=str, help='.txt file containing EC predicates', default="predicates.txt")
 
     return cmd_parser
@@ -92,7 +92,7 @@ class Predicate(object):
         self.name = name
         self.args = args
         self.instances = list()
-        self.remarks_for_instances = list()     # to capture boolean for "HoldsAt predicate"
+        self.remarks_for_instances = list()     # e.g. to capture boolean for "HoldsAt"
 
     def __repr__(self):
         """
@@ -102,7 +102,7 @@ class Predicate(object):
 
     def addInstanceAndReify(self, arg_string: str, agent_dict: Dict[str, List[str]], pred_remarks: str = ""):
         """
-        Constructor function
+        For the given predicate, parse the inputs, reify and append to the instances[] list
         :param arg_string: format = "EventName(Agent1,Agent2),FluentName(),time"
         :param agent_dict: dictionary of all agents, with agent_names as keys, which maps to instances as a list
         :param pred_remarks: to capture instance specific boolean values
@@ -163,11 +163,17 @@ class Predicate(object):
         return result
 
     def circumscribe(self):
+        """
+        For the given predicate, print circumscribed output
+        """
+        # predicate boiler plate, e.g. Initiates(event, fluent, time)
         boiler = self.name + "(" + ', '.join(self.args) + ")"
 
+        # print [event,fluent,time] or other arguments, as specified
         print("[" + ','.join(self.args) + "]", end=" ")
+
         if len(self.instances) == 0:
-            print(boiler+".")
+            print(boiler + ".")
         else:
             print("(", boiler, "<=>")
 
@@ -208,15 +214,54 @@ def readPredicates(predicates_file: str) -> Dict[str, Predicate]:
         tokens = re.findall(r'\w+', line)
         predicates_dict[tokens[0]] = Predicate(tokens[0], tokens[1:])
 
+    # add "\\not Releases" and "\\not ReleasedAt" to predicates_dict
+    for new_predicate in ["Releases", "ReleasedAt"]:
+        if new_predicate in predicates_dict.keys():
+            predicates_dict[("\\not " + new_predicate)] = Predicate(
+                ("\\not " + new_predicate), predicates_dict[new_predicate].args)
+
     return predicates_dict
+
+
+def helperRefiy(predicateItem: str) -> str:
+    """
+    Helper function for reifyStateConstraints() function
+    :param predicateItem: example = "!HoldsAt(Dead(), time)."
+    :return: example "!HoldsAt(dead, time)."
+    """
+    result = ""
+
+    if predicateItem[0] == "!":
+        result += predicateItem[0]
+        predicateItem = predicateItem[1:]
+
+    tokens = re.findall(r'\w+', predicateItem)
+    result += tokens[0] + "(" + tokens[1].lower() + ", " + tokens[2] + ")"
+    
+    if predicateItem[-1] == ".":
+        result += "."
+
+    return result
+
+def reifyStateConstraints(stateConstraints: List[List[str]]):
+    """
+    Function to reify and print State Constraints
+    :param stateConstraints: example = [
+        ['[time]', 'HoldsAt(Dead(),time)', '<->', '!HoldsAt(Alive(),time).'],
+        ['[time]', '!HoldsAt(Dead(),time)', '<->', 'HoldsAt(Alive(),time).']]
+    """
+    for stateConstraint in stateConstraints:
+        stateConstraint[1] = helperRefiy(stateConstraint[1])
+        stateConstraint[3] = helperRefiy(stateConstraint[3])
+
+        inst_string = " ".join(stateConstraint)
+
+        print(inst_string)
 
 def main(input_file_name, output_file, predicates_file):
     predicates_dict = readPredicates(predicates_file)
-    if "Releases" in predicates_dict.keys():
-        predicates_dict["\\not Releases"] = Predicate("\\not Releases", predicates_dict["Releases"].args)
-    if "ReleasedAt" in predicates_dict.keys():
-        predicates_dict["\\not ReleasedAt"] = Predicate("\\not ReleasedAt", predicates_dict["ReleasedAt"].args)
 
+    # set output stream for "print()"
     f = open(output_file, "w")
     sys.stdout = f
 
@@ -234,7 +279,8 @@ def main(input_file_name, output_file, predicates_file):
     }
 
     interesting_dict = {
-        "noninertial": []
+        "noninertial": [],
+        "stateconstraints": []
     }
 
     domain_file = open(input_file_name, 'r')
@@ -282,15 +328,21 @@ def main(input_file_name, output_file, predicates_file):
 
         else:
             if words[0][0] == "[":
-                # action descriptions
+                # simple action descriptions
                 if len(words) == 2:
                     pred_name, pred_args = words[1].split("(", maxsplit=1)
                     pred_args = pred_args[:-2]
 
                     predicates_dict[pred_name].addInstanceAndReify(pred_args, agent_dict)
-                # state constraints or useless line
+                # state constraints or other lines
                 else:
-                    pass
+                    # parse state constraints
+                    if words[2] == "<->":
+                        interesting_dict["stateconstraints"].append(words)
+                    # compound action descriptions
+                    else:
+                        pass
+            # parse initial state
             else:
                 pred_remarks = ""
                 if words[0][0] == '!':
@@ -301,8 +353,6 @@ def main(input_file_name, output_file, predicates_file):
                 pred_args = pred_args[:-2]
                 predicates_dict[pred_name].addInstanceAndReify(pred_args, agent_dict, pred_remarks)
     
-    # print("Sorts=", sorts_dict)
-    # print("Agents=", agent_dict)
 
     # STEP 1: Reification
     print("%% Step 1: Reification")
@@ -320,10 +370,11 @@ def main(input_file_name, output_file, predicates_file):
     print("\n%% Step 2: Uniqueness")
 
     for sort_type in ["event", "fluent"]:
-        print("%% Uniqueness-of-names axioms for", sort_type)
+        print("\n%% Uniqueness-of-names axioms for", sort_type)
         sort_comb = itertools.combinations(reified_dict[sort_type], 2)
         for sort_pair in list(sort_comb):
             print(sort_pair[0]," != ", sort_pair[1])
+
 
     # STEP 3: circumscription
     print("\n%% STEP 3: circumscription")
@@ -360,6 +411,11 @@ def main(input_file_name, output_file, predicates_file):
         
         predicates_dict["\\not ReleasedAt"].circumscribe()
         # predicates_dict["ReleasedAt"].circumscribe()
+
+    # reified state constraints
+    if len(interesting_dict["stateconstraints"]) != 0:
+        print("%% The reified state constraint(s)")
+        reifyStateConstraints(interesting_dict["stateconstraints"])
 
 
 if __name__ == "__main__":

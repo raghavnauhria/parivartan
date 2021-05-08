@@ -1,12 +1,14 @@
 sort Agent1.
 sort Agent2.
-sort Agent3.
+sort Object1.
+sort Object2.
+
 
 event Load(Agent1,Agent2).
 event Shoot().
 event Sneeze().
 
-fluent Loaded().
+fluent Loaded(Object1,Object2).
 fluent Alive().
 fluent Dead().
 
@@ -16,14 +18,21 @@ Agent1 a12.
 Agent2 a21.
 Agent2 a22.
 
+Object1 o11.
+Object1 o12.
+
+Object2 o21.
+Object2 o22.
+
 time 0.
 time 1.
 time 2.
 
 noninertial Dead().
 
-[time] Terminates(Shoot(),Loaded(),time).
-[time] Initiates(Load(Agent1,Agent2),Loaded(),time).
+[time] Terminates(Shoot(),Loaded(Object1,Object2),time).
+[time] Initiates(Load(Agent1,Agent2),Loaded(Object1,Object2),time).
+[time] HoldsAt(Dead(),time) <-> !HoldsAt(Alive(),time).
 
 Happens(Sneeze(),1).
 Happens(Shoot(),2).
