@@ -2,7 +2,7 @@
 
 ## Authors
 - Raghav Nauhria, IIT Madras, [LinkedIn](https://www.linkedin.com/in/raghavnauhria), [GitHub](https://github.com/raghavnauhria)  
-- Nipam Basumatary, IIT Madras
+- Nipam Basumatary, IIT Madras, [LinkedIn](https://www.linkedin.com/in/nipam-basumatary-3a95bb153/)
 
 ## Prerequisites
 - Install python 3.x
