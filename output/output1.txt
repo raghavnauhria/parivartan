@@ -46,3 +46,43 @@ HoldsAt(alive,0).
 
 %% The reified state constraint(s)
 [time] HoldsAt(dead, time) <-> !HoldsAt(alive, time).
+
+%% EC Axioms
+[fluent, time]
+( HoldsAt ( fluent, time ) &
+    ! ReleasedAt ( fluent, time+1 ) &
+    ! ( {event} Happens ( event, time ) &
+Terminates ( event, fluent, time ) ) ) ->
+HoldsAt ( fluent, time+1 ) .
+
+[fluent, time]
+( ! HoldsAt ( fluent, time) &
+    ! ReleasedAt ( fluent, time+1 ) &
+    ! ( {event} Happens ( event, time) &    
+Initiates ( event, fluent, time ) ) ) ->
+! HoldsAt ( fluent, time+1 ) .
+
+[fluent, time]
+( ! ReleasedAt ( fluent, time) &
+    ! ( {event} Happens ( event, time ) &
+Releases ( event, fluent, time ) ) ) ->
+! ReleasedAt ( fluent, time+1 ) .
+
+[fluent, time]
+( ReleasedAt ( fluent, time ) &
+    ! ( {event} Happens ( event, time ) &
+        ( Initiates ( event, fluent, time) |
+        Terminates ( event, fluent, time ) ) ) ) ->
+ReleasedAt ( fluent, time+1 ) .
+
+[event, fluent, time]
+( Happens ( event, time ) & Initiates ( event, fluent, time ) ) ->
+( HoldsAt ( fluent, time+1 ) & ! ReleasedAt ( fluent, time+1 ) ) .
+
+[event, fluent, time]
+( Happens ( event, time ) & Terminates ( event, fluent, time ) ) ->
+( ! HoldsAt ( fluent, time+1 ) & ! ReleasedAt ( fluent, time+1 ) ) .
+
+[event, fluent, time]
+( Happens ( event, time ) & Releases ( event, fluent, time ) ) ->
+ReleasedAt ( fluent, time+1 ) .

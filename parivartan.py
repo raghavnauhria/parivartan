@@ -14,6 +14,7 @@ def create_cmdline_parser() -> argparse.ArgumentParser:
     cmd_parser.add_argument('-i', '--input', action='store', type=str, help='input file = domain file name', default="domain.txt")
     cmd_parser.add_argument('-o', '--output', action='store', type=str, help='output file name (NOTE: file will be overwritten)', default="output.txt")
     cmd_parser.add_argument('-p', '--predicates', action='store', type=str, help='.txt file containing EC predicates', default="predicates.txt")
+    cmd_parser.add_argument('-a', '--axioms', action='store', type=str, help='.txt file containing EC axioms', default="axioms.txt")
 
     return cmd_parser
 
@@ -258,7 +259,7 @@ def reifyStateConstraints(stateConstraints: List[List[str]]):
 
         print(inst_string)
 
-def main(input_file_name, output_file, predicates_file):
+def main(input_file_name: str, output_file: str, predicates_file: str, axioms_file: str):
     predicates_dict = readPredicates(predicates_file)
 
     # set output stream for "print()"
@@ -417,9 +418,14 @@ def main(input_file_name, output_file, predicates_file):
         print("%% The reified state constraint(s)")
         reifyStateConstraints(interesting_dict["stateconstraints"])
 
+    print("\n%% EC Axioms")
+    axioms = open(axioms_file, 'r')
+    print(axioms.read())
+    axioms.close()
+
 
 if __name__ == "__main__":
     parser = create_cmdline_parser()
     args = parser.parse_args()
 
-    main(args.input, args.output, args.predicates)
+    main(args.input, args.output, args.predicates, args.axioms)
