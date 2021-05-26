@@ -19,12 +19,12 @@ def create_cmdline_parser() -> argparse.ArgumentParser:
     return cmd_parser
 
 
-def reification_master(sort_name: str, sort_args: List[str], agent_dict: Dict[str, List[str]]) -> List[str]:
+def reification_master(sort_name: str, sort_args: List[str], domainObj_dict: Dict[str, List[str]]) -> List[str]:
     """
-    Function to reify the given sort, i.e. event/fluent, w.r.t the agents in the argument
+    Function to reify the given sort, i.e. event/fluent, w.r.t the domainObj in the argument
     :param sort_name:  name of the sort
     :param sort_args:  list of arguments to the sort
-    :param agent_dict: dictionary of all agents, with agent_names as keys, which maps to instances as a list
+    :param domainObj_dict: dictionary of all domainObj, with domainObj_names as keys, which maps to instances as a list
     :return: list of reified atoms
     """
     reification_prefix = sort_name                  # "load"
@@ -34,14 +34,14 @@ def reification_master(sort_name: str, sort_args: List[str], agent_dict: Dict[st
     else:
         result = []
 
-        agent_list = []  # list of lists
-        for agent in sort_args:
-            if agent in agent_dict.keys():
-                agent_list.append(agent_dict[agent])
+        domainObj_list = []  # list of lists
+        for domainObj in sort_args:
+            if domainObj in domainObj_dict.keys():
+                domainObj_list.append(domainObj_dict[domainObj])
             else:
-                agent_list.append([agent])
+                domainObj_list.append([domainObj])
 
-        for permutation in list(itertools.product(*agent_list)):
+        for permutation in list(itertools.product(*domainObj_list)):
             atom = reification_prefix + "_"         # "load_"
 
             perm_list = list(permutation)
@@ -71,14 +71,14 @@ class DomainSort(object):
         """
         return "DomainSort(name=%s, args=%s, reified=%s)" % (self.name, self.args, self.reified)
 
-    def reify(self, agent_dict: Dict[str, List[str]]):
+    def reify(self, domainObj_dict: Dict[str, List[str]]):
         """
-        Function to reify the given event/fluent w.r.t the agents in the argument
-        :param agent_dict: dictionary of all agents, with agent_names as keys, which maps to instances as a list
+        Function to reify the given event/fluent w.r.t the domainObjs in the argument
+        :param domainObj_dict: dictionary of all domainObjs, with domainObj_names as keys, which maps to instances as a list
         """
         reification_prefix = self.name.lower()         # "load"
 
-        result = reification_master(reification_prefix, self.args, agent_dict)
+        result = reification_master(reification_prefix, self.args, domainObj_dict)
 
         self.reified.extend(result)
 
@@ -101,11 +101,11 @@ class Predicate(object):
         """
         return "Predicate(name=%s, args=%s, instances=%s, remarks=%s)" % (self.name, self.args, self.instances, self.remarks_for_instances)
 
-    def addInstanceAndReify(self, arg_string: str, agent_dict: Dict[str, List[str]], pred_remarks: str = ""):
+    def addInstanceAndReify(self, arg_string: str, domainObj_dict: Dict[str, List[str]], pred_remarks: str = ""):
         """
         For the given predicate, parse the inputs, reify and append to the instances[] list
         :param arg_string: format = "EventName(Agent1,Agent2),FluentName(),time"
-        :param agent_dict: dictionary of all agents, with agent_names as keys, which maps to instances as a list
+        :param domainObj_dict: dictionary of all domainObjs, with domainObj_names as keys, which maps to instances as a list
         :param pred_remarks: to capture instance specific boolean values
         """
         reified_instance = []  # list of lists
@@ -129,7 +129,7 @@ class Predicate(object):
                 sort_args = re.findall(r'\w+', arg_string[:parenthesis_end])
                 arg_string = arg_string[parenthesis_end:]
                 
-                result = reification_master(sort_name, sort_args, agent_dict)
+                result = reification_master(sort_name, sort_args, domainObj_dict)
                 
                 # reify
                 reified_instance.append(result)
@@ -272,7 +272,7 @@ def main(input_file_name: str, output_file: str, predicates_file: str, axioms_fi
         "time": []
     }
 
-    agent_dict = {}
+    domainObj_dict = {}
 
     reified_dict = {
         "event": [],
@@ -295,19 +295,19 @@ def main(input_file_name: str, output_file: str, predicates_file: str, axioms_fi
 
         words = line.strip().split(" ")
         
-        # add agent as dictionary key
+        # add domainObj as dictionary key
         if words[0] == "sort":
             if words[1][-1] == ".":
                 words[1] = words[1][:-1]
 
-            agent_dict[words[1]] = list()
+            domainObj_dict[words[1]] = list()
 
-        # add instance of agent to list in agent_dict
-        elif words[0] in agent_dict.keys():
+        # add instance of domainObj to list in domainObj_dict
+        elif words[0] in domainObj_dict.keys():
             if words[1][-1] == ".":
                 words[1] = words[1][:-1]
 
-            agent_dict[words[0]].append(words[1])
+            domainObj_dict[words[0]].append(words[1])
 
         # words[0] == "event" || "fluent" || "time"
         elif words[0] in sorts_dict.keys():
@@ -325,7 +325,7 @@ def main(input_file_name: str, output_file: str, predicates_file: str, axioms_fi
             interesting_dict[words[0]].append(words[1])
             pred_args = "event,%s,time"%(words[1])
 
-            predicates_dict["Releases"].addInstanceAndReify(pred_args, agent_dict)
+            predicates_dict["Releases"].addInstanceAndReify(pred_args, domainObj_dict)
 
         else:
             if words[0][0] == "[":
@@ -334,7 +334,7 @@ def main(input_file_name: str, output_file: str, predicates_file: str, axioms_fi
                     pred_name, pred_args = words[1].split("(", maxsplit=1)
                     pred_args = pred_args[:-2]
 
-                    predicates_dict[pred_name].addInstanceAndReify(pred_args, agent_dict)
+                    predicates_dict[pred_name].addInstanceAndReify(pred_args, domainObj_dict)
                 # state constraints or other lines
                 else:
                     # parse state constraints
@@ -352,14 +352,14 @@ def main(input_file_name: str, output_file: str, predicates_file: str, axioms_fi
 
                 pred_name, pred_args = words[0].split("(", maxsplit=1)
                 pred_args = pred_args[:-2]
-                predicates_dict[pred_name].addInstanceAndReify(pred_args, agent_dict, pred_remarks)
+                predicates_dict[pred_name].addInstanceAndReify(pred_args, domainObj_dict, pred_remarks)
     
 
     # STEP 1: Reification
     print("%% Step 1: Reification")
     for sort_type in ["event", "fluent"]:
         for sort_obj in sorts_dict[sort_type]:
-            sort_obj.reify(agent_dict)
+            sort_obj.reify(domainObj_dict)
 
             reified_dict[sort_type].extend(sort_obj.reified)
 
@@ -392,7 +392,7 @@ def main(input_file_name: str, output_file: str, predicates_file: str, axioms_fi
             fluent_inst = fluent_.name + "(" + ','.join(fluent_.args) +  ")"
             if fluent_inst not in interesting_dict["noninertial"]:
                 pred_args = "event,%s,time" % (fluent_inst)
-                predicates_dict["\\not Releases"].addInstanceAndReify(pred_args, agent_dict)
+                predicates_dict["\\not Releases"].addInstanceAndReify(pred_args, domainObj_dict)
         
         predicates_dict["\\not Releases"].circumscribe()
         predicates_dict["Releases"].circumscribe()
@@ -408,7 +408,7 @@ def main(input_file_name: str, output_file: str, predicates_file: str, axioms_fi
             fluent_inst = fluent_.name + "(" + ','.join(fluent_.args) +  ")"
             if fluent_inst not in interesting_dict["noninertial"]:
                 pred_args = "%s,time" % (fluent_inst)
-                predicates_dict["\\not ReleasedAt"].addInstanceAndReify(pred_args, agent_dict)
+                predicates_dict["\\not ReleasedAt"].addInstanceAndReify(pred_args, domainObj_dict)
         
         predicates_dict["\\not ReleasedAt"].circumscribe()
         # predicates_dict["ReleasedAt"].circumscribe()
