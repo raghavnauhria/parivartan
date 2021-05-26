@@ -61,8 +61,8 @@ time <timeInstance2>.
 ### 5. Additional resources (if required)
 example, noninertial
 ```
-noninertial <EventName>.
-noninertial <EventName>(<AgentName1>,<AgentName2>).
+noninertial <FluentName>.
+noninertial <FluentName>(<AgentName1>,<AgentName2>).
 ...
 ```
 
