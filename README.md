@@ -1,4 +1,5 @@
 # DEC to FOL
+[Link to GitHub Repo](https://github.com/raghavnauhria/parivartan)
 
 ## Authors
 - Raghav Nauhria, IIT Madras, [LinkedIn](https://www.linkedin.com/in/raghavnauhria), [GitHub](https://github.com/raghavnauhria)  
